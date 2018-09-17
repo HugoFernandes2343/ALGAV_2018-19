@@ -1,6 +1,6 @@
 # README #
 
-This is the root folder of the repository for ALGAV 2017/18
+This is the root folder of the repository for ALGAV 2018/19
 
 Sub-folders are organized as follows:
 
