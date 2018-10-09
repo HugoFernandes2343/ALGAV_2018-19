@@ -74,20 +74,26 @@ componente(direccao,avanco_guiador,1).
 
 
 
-% 2 utilizamos dois predicados para criar as listas de elemX e elemY,
-% juntamos com append, fazemos sort as listas, e geramos os elementos
+% 2 utilizamos dois predicados para criar as listas de elemX e elemY e
+% ordena-las removendo os elementos duplicados, juntamos com append,
+% fazemos sort as listas, e geramos os elementos
 
-elsY(L):-findall(Element,componente(_,Element,_),L).
-elsX(L):-findall(Element,componente(Element,_,_),L).
+elsY(L):-findall(Element,componente(_,Element,_),L1), sort(L1,L).
+elsX(L):-findall(Element,componente(Element,_,_),L1), sort(L1,L).
 gera([]).
 gera([X|L]):-assert(elemento(X)),gera(L).
 gerar_elemento():-elsX(X),elsY(Y),append(X,Y,Res1),sort(Res1,Res),gera(Res).
 
 
 
-% 3 utilizando o predicado que nos devolve a lista de X fazemos sort a
-% essa lista, depois usamos member para dizer que X tem que pertencer a
-% essa lista, depois vamos buscar a lista de Y's fazemos sort e
-% verificamos que X nao pertence
+% 3 utilizando o predicado que nos devolve a lista de X, depois usamos
+% member para dizer que Elemento tem que pertencer a essa lista, depois
+% vamos buscar a lista de Y's e verificamos que Elemento nao pertence
 
-produto_final(Elemento):-elsX(ListaX),sort(ListaX,Lx),member(Elemento,Lx), elsY(Y1),sort(Y1,Y), \+member(Elemento,Y).
+produto_final(Elemento):-elsX(Lx),member(Elemento,Lx), elsY(Ly), \+member(Elemento,Ly).
+
+% 4 utilizando o predicado que nos devolve a lista de Y, usamos member
+% para dizer que Elemento tem de pertencer a essa lista, depois vamos
+% buscar a lista de X's e verificamos que Elemento nao pertence
+
+produto_base(Elemento):- elsY(Ly), member(Elemento,Ly), elsX(Lx),\+member(Elemento,Lx).
