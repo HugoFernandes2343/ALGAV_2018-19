@@ -97,3 +97,7 @@ produto_final(Elemento):-elsX(Lx),member(Elemento,Lx), elsY(Ly), \+member(Elemen
 % buscar a lista de X's e verificamos que Elemento nao pertence
 
 produto_base(Elemento):- elsY(Ly), member(Elemento,Ly), elsX(Lx),\+member(Elemento,Lx).
+
+% 5 modificar o produto final removendo o /+ para ver que X tambem
+% pertence aos Y's
+produto_intermedio(Elemento):-elsX(Lx),member(Elemento,Lx), elsY(Ly), member(Elemento,Ly).

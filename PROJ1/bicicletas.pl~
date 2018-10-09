@@ -95,6 +95,8 @@ produto_final(Elemento):-elsX(Lx),member(Elemento,Lx), elsY(Ly), \+member(Elemen
 % 4 utilizando o predicado que nos devolve a lista de Y, usamos member
 % para dizer que Elemento tem de pertencer a essa lista, depois vamos
 % buscar a lista de X's e verificamos que Elemento nao pertence
-%
 
 produto_base(Elemento):- elsY(Ly), member(Elemento,Ly), elsX(Lx),\+member(Elemento,Lx).
+
+%5
+produto_intermedio(Elemento):-elsX(Lx),member(Elemento,Lx), elsY(Ly), member(Elemento,Ly).
