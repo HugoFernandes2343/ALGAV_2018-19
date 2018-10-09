@@ -101,3 +101,32 @@ produto_base(Elemento):- elsY(Ly), member(Elemento,Ly), elsX(Lx),\+member(Elemen
 % 5 modificar o produto final removendo o /+ para ver que X tambem
 % pertence aos Y's
 produto_intermedio(Elemento):-elsX(Lx),member(Elemento,Lx), elsY(Ly), member(Elemento,Ly).
+
+% 6 usamos o algoritimo de BFS para calcular a partir de bicicleta ate
+% cada um dos pontos e dps subtraimos os resultados um ao outro e o
+% valor absoluto dessa conta é o nivel
+
+%BFS algoritmo
+bfs(Orig,Dest,Cam):- bfs2(Dest,[[Orig]],Cam).
+
+%condicao final: destino = nó à cabeça do caminho atual
+bfs2(Dest,[[Dest|T]|_],Cam):-
+    %caminho atual está invertido
+    reverse([Dest|T],Cam).
+
+bfs2(Dest,[LA|Outros],Cam):-
+     LA=[Act|_],
+     %calcular todos os nos adjacentes nao visitados e
+     %gerar um caminho novo c/ cada no e caminho atual
+     findall([X|LA],(Dest\==Act, componente(Act,X,_),\+ member(X,LA)),Novos),
+     %novos caminhos sao colocados no final da lista
+     %p/ posterior exploracao
+     append(Outros,Novos,Todos),
+     %chamada recursica
+     bfs2(Dest,Todos,Cam).
+
+
+count([],0).
+count([_|T],N):- count(T,N1), N is N1+1.
+
+nivel(ElemX,ElemY,Nvl):- produto_final(X),bfs(X,ElemX,CamX),count(CamX,NX), bfs(X,ElemY,CamY),count(CamY,NY) ,Nvl is abs( NX - NY).
