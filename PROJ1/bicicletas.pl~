@@ -102,7 +102,9 @@ produto_base(Elemento):- elsY(Ly), member(Elemento,Ly), elsX(Lx),\+member(Elemen
 % pertence aos Y's
 produto_intermedio(Elemento):-elsX(Lx),member(Elemento,Lx), elsY(Ly), member(Elemento,Ly).
 
-%6
+% 6 usamos o algoritimo de BFS para calcular a partir de bicicleta ate
+% cada um dos pontos e dps subtraimos os resultados um ao outro e o
+% valor absoluto dessa conta é o nivel
 
 %BFS algoritmo
 bfs(Orig,Dest,Cam):- bfs2(Dest,[[Orig]],Cam).

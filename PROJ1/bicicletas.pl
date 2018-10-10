@@ -130,3 +130,7 @@ count([],0).
 count([_|T],N):- count(T,N1), N is N1+1.
 
 nivel(ElemX,ElemY,Nvl):- produto_final(X),bfs(X,ElemX,CamX),count(CamX,NX), bfs(X,ElemY,CamY),count(CamY,NY) ,Nvl is abs( NX - NY).
+
+%13 predicado de imprimir
+
+guardarBaseConhecimento(Nome):- tell(Nome), listing, told.

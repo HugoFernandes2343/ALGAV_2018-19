@@ -1,0 +1,467 @@
+
+:- dynamic exception/3.
+:- multifile exception/3.
+
+
+count([], 0).
+count([_|A], B) :-
+	count(A, C),
+	B is C+1.
+
+:- multifile prolog_clause_name/2.
+
+prolog_clause_name(A, C) :-
+    pce_portray:
+    (   clause(B, _, A),
+	user:prolog_predicate_name(B, C)
+    ).
+
+:- multifile prolog_predicate_name/2.
+
+prolog_predicate_name(pce_principal:send_implementation(A, _, _), C) :-
+    pce_portray:
+    (   method_from_id(A, B),
+	atom_from_method(B, C)
+    ).
+prolog_predicate_name(pce_principal:get_implementation(A, _, _, _), C) :-
+    pce_portray:
+    (   method_from_id(A, B),
+	atom_from_method(B, C)
+    ).
+
+:- dynamic elemento/1.
+
+elemento(aperto_rapido).
+elemento(aperto_rapido_selim).
+elemento(aro).
+elemento(avanco_guiador).
+elemento(bicha).
+elemento(bicicleta).
+elemento(braco_pedal).
+elemento(cabo).
+elemento(caixa_direccao).
+elemento(cassete).
+elemento(conjunto_selim).
+elemento(conjunto_transmissao).
+elemento(conjunto_travagem).
+elemento(corrente).
+elemento(cubo).
+elemento(desviador_dianteiro).
+elemento(desviador_traseiro).
+elemento(direccao).
+elemento(disco).
+elemento(escora_diagonal).
+elemento(escora_horizontal).
+elemento(espigao).
+elemento(forqueta_frontal).
+elemento(guiador).
+elemento(manete).
+elemento(manete_dianteira).
+elemento(manete_traseira).
+elemento('mudanças_dianteira').
+elemento('mudanças_traseira').
+elemento(pastilha).
+elemento(pedal).
+elemento(pedaleiro).
+elemento(pneu).
+elemento(prato).
+elemento(quadro).
+elemento(raio).
+elemento(roda).
+elemento(rolamento).
+elemento(selim).
+elemento(travao_direito).
+elemento(travao_esquerdo).
+elemento(tubo_diagonal).
+elemento(tubo_selim).
+elemento(tubo_superior).
+elemento(valvula).
+
+guardarBaseConhecimento(A) :-
+	tell(A),
+	listing,
+	told.
+
+:- dynamic library_directory/1.
+:- multifile library_directory/1.
+
+library_directory(B) :-
+    '$parms':
+    (   cached_library_directory(local, A=lib, A),
+	B=A
+    ).
+library_directory(B) :-
+    '$parms':
+    (   cached_library_directory(user,
+				 expand_file_name('~/lib/prolog', [A]),
+				 A),
+	B=A
+    ).
+library_directory(B) :-
+    '$parms':
+    (   cached_library_directory(system,
+				 absolute_file_name(swi(library), A),
+				 A),
+	B=A
+    ).
+library_directory(B) :-
+    '$parms':
+    (   cached_library_directory(clp,
+				 absolute_file_name(swi('library/clp'), A),
+				 A),
+	B=A
+    ).
+
+:- multifile url_path/2.
+
+
+:- thread_local thread_message_hook/3.
+:- dynamic thread_message_hook/3.
+:- volatile thread_message_hook/3.
+
+
+:- dynamic expand_answer/2.
+:- multifile expand_answer/2.
+
+
+:- dynamic file_search_path/2.
+:- multifile file_search_path/2.
+
+file_search_path(library, A) :-
+	library_directory(A).
+file_search_path(swi, A) :-
+	system:current_prolog_flag(home, A).
+file_search_path(foreign, swi(B)) :-
+    system:
+    (   current_prolog_flag(arch, A),
+	atom_concat('lib/', A, B)
+    ).
+file_search_path(foreign, swi(A)) :-
+    system:
+    (   (   current_prolog_flag(windows, true)
+	->  A=bin
+	;   A=lib
+	)
+    ).
+file_search_path(path, C) :-
+    system:
+    (   getenv('PATH', A),
+	(   current_prolog_flag(windows, true)
+	->  atomic_list_concat(B, ;, A)
+	;   atomic_list_concat(B, :, A)
+	),
+	'$member'(C, B),
+	'$no-null-bytes'(C)
+    ).
+file_search_path(user_profile, app_preferences('.')).
+file_search_path(app_preferences, app_data('.')).
+file_search_path(app_data, B) :-
+    '$toplevel':
+    (   current_prolog_flag(windows, true),
+	catch(win_folder(appdata, A), _, fail),
+	atom_concat(A, '/SWI-Prolog', B),
+	(   exists_directory(B)
+	->  true
+	;   catch(make_directory(B), _, fail)
+	)
+    ).
+file_search_path(app_preferences, A) :-
+	'$toplevel':catch(expand_file_name(~, [A]), _, fail).
+file_search_path(autoload, library('.')).
+file_search_path(pack, app_data(pack)).
+file_search_path(pack, swi(pack)).
+file_search_path(library, A) :-
+	'$pack':pack_dir(_, prolog, A).
+file_search_path(foreign, A) :-
+	'$pack':pack_dir(_, foreign, A).
+file_search_path(pce, A) :-
+	link_xpce:pcehome_(A).
+file_search_path(library, pce('prolog/lib')).
+file_search_path(foreign, pce(B)) :-
+    link_xpce:
+    (   current_prolog_flag(arch, A),
+	atom_concat('lib/', A, B)
+    ).
+file_search_path(pce_boot, 'c:/program files/swipl/xpce/prolog/boot').
+file_search_path(demo, pce('prolog/demo')).
+file_search_path(contrib, pce('prolog/contrib')).
+file_search_path(image, pce(bitmaps)).
+file_search_path(emacs_user_library, user_profile('/lib/xpce/emacs')).
+file_search_path(pce_help, pce('appl-help')).
+file_search_path(config, B) :-
+    pce_config:
+    (   get(@pce, application_data, A),
+	get(A, path, B)
+    ).
+file_search_path(pldoc, library(pldoc)).
+file_search_path(package_documentation, swi('doc/packages')).
+file_search_path(pldoc, library(pldoc)).
+
+elsX(C) :-
+	findall(A, componente(A, _, _), B),
+	sort(B, C).
+
+:- dynamic message_hook/3.
+:- multifile message_hook/3.
+
+message_hook('$aborted', _, _) :-
+    pce_host:
+    (   current_prolog_flag(xpce, true),
+	send(@display, reset),
+	fail
+    ).
+message_hook(A, B, C) :-
+    swi_prolog_emacs_binding:
+    (   current_prolog_flag(message_ide, true),
+	ide_message(A, B, C),
+	fail
+    ).
+message_hook(load_file(done(0, _, _, _, _, _)), _, _) :-
+    pldoc_register:
+    (   (   mydoc(_, _, _)
+	->  debug(pldoc, 'Processing delayed comments', []),
+	    process_stored_comments
+	),
+	fail
+    ).
+
+:- dynamic prolog_event_hook/1.
+:- multifile prolog_event_hook/1.
+
+prolog_event_hook(break(B, C, A)) :-
+	prolog_breakpoints:break(A, B, C).
+
+bfs2(A, [[A|B]|_], C) :-
+	reverse([A|B], C).
+bfs2(B, [A|E], H) :-
+	A=[C|_],
+	findall([D|A],
+		( B\==C,
+		  componente(C, D, _),
+		  \+ member(D, A)
+		),
+		F),
+	append(E, F, G),
+	bfs2(B, G, H).
+
+gera([]).
+gera([A|B]) :-
+	assert(elemento(A)),
+	gera(B).
+
+:- multifile prolog_list_goal/1.
+
+prolog_list_goal(pce_principal:send_implementation(A, _, _)) :-
+    pce_portray:
+    (    !,
+	(   B=pce_principal:send_implementation(A, F, E),
+	    method_from_id(A,  (C->D)),
+	    clause(B, G)
+	->  format('~N~n% XPCE Method ~w->~w:~n~n', [C, D]),
+	    portray_clause((E->F:-G)),
+	    nl
+	;   format('No XPCE method implementation for id=~p~n', [A])
+	)
+    ).
+prolog_list_goal(pce_principal:get_implementation(A, _, _, _)) :-
+    pce_portray:
+    (    !,
+	(   B=pce_principal:get_implementation(A, G, F, E),
+	    method_from_id(A, <-(C, D)),
+	    clause(B, H)
+	->  format('~N~n% XPCE Method ~w<-~w:~n~n', [C, D]),
+	    portray_clause((E= <-(F, G):-H)),
+	    nl
+	;   format('No XPCE method implementation for id=~p~n', [A])
+	)
+    ).
+
+:- dynamic pce_pre_expansion_hook/2.
+:- multifile pce_pre_expansion_hook/2.
+
+pce_pre_expansion_hook(A, B) :-
+	emacs_extend:emacs_expansion(A, B).
+
+bfs(B, A, C) :-
+	bfs2(A, [[B]], C).
+
+:- dynamic prolog_exception_hook/4.
+:- multifile prolog_exception_hook/4.
+
+prolog_exception_hook(error(A, context(D, B)), error(A, context(prolog_stack(J), B)), G, C) :-
+    prolog_stack:
+    (   current_prolog_flag(backtrace, true),
+	(   atom(C)
+	->  debug(backtrace,
+		  'Got uncaught (guard = ~q) exception ~p (Ctx0=~p)',
+		  [C, A, D]),
+	    stack_guard(C)
+	;   prolog_frame_attribute(C, predicate_indicator, E),
+	    debug(backtrace,
+		  'Got exception ~p (Ctx0=~p, Catcher=~p)',
+		  [A, D, E]),
+	    stack_guard(E)
+	),
+	(   current_prolog_flag(backtrace_depth, F)
+	->  F>0
+	;   F=20
+	),
+	get_prolog_backtrace(G, F, H),
+	debug(backtrace, 'Stack = ~p', [H]),
+	clean_stack(H, I),
+	join_stacks(D, I, J)
+    ).
+
+componente(bicicleta, quadro, 1).
+componente(bicicleta, roda, 2).
+componente(bicicleta, conjunto_travagem, 1).
+componente(bicicleta, conjunto_transmissao, 1).
+componente(bicicleta, conjunto_selim, 1).
+componente(bicicleta, direccao, 1).
+componente(quadro, tubo_superior, 1).
+componente(quadro, tubo_diagonal, 1).
+componente(quadro, tubo_selim, 1).
+componente(quadro, escora_diagonal, 1).
+componente(quadro, escora_horizontal, 1).
+componente(quadro, forqueta_frontal, 1).
+componente(roda, pneu, 1).
+componente(roda, aro, 1).
+componente(roda, valvula, 1).
+componente(roda, cubo, 1).
+componente(roda, aperto_rapido, 1).
+componente(roda, raio, 30).
+componente(conjunto_travagem, travao_direito, 1).
+componente(conjunto_travagem, travao_esquerdo, 1).
+componente(travao_esquerdo, manete, 1).
+componente(travao_esquerdo, cabo, 1).
+componente(travao_esquerdo, bicha, 1).
+componente(travao_esquerdo, disco, 1).
+componente(travao_esquerdo, pastilha, 2).
+componente(travao_direito, manete, 1).
+componente(travao_direito, cabo, 1).
+componente(travao_direito, bicha, 1).
+componente(travao_direito, disco, 1).
+componente(travao_direito, pastilha, 2).
+componente(conjunto_transmissao, pedaleiro, 1).
+componente(pedaleiro, pedal, 1).
+componente(pedaleiro, braco_pedal, 1).
+componente(pedaleiro, rolamento, 1).
+componente(pedaleiro, prato, 1).
+componente(conjunto_transmissao, corrente, 1).
+componente(conjunto_transmissao, desviador_traseiro, 1).
+componente(conjunto_transmissao, desviador_dianteiro, 1).
+componente(conjunto_transmissao, cassete, 1).
+componente(conjunto_transmissao, 'mudanças_dianteira', 1).
+componente('mudanças_dianteira', manete_dianteira, 1).
+componente('mudanças_dianteira', bicha, 1).
+componente('mudanças_dianteira', cabo, 1).
+componente(conjunto_transmissao, 'mudanças_traseira', 1).
+componente('mudanças_traseira', manete_traseira, 1).
+componente('mudanças_traseira', bicha, 1).
+componente('mudanças_traseira', cabo, 1).
+componente(conjunto_selim, selim, 1).
+componente(conjunto_selim, espigao, 1).
+componente(conjunto_selim, aperto_rapido_selim, 1).
+componente(direccao, caixa_direccao, 1).
+componente(direccao, guiador, 1).
+componente(direccao, avanco_guiador, 1).
+
+:- multifile message_property/2.
+
+
+:- dynamic pce_post_expansion_hook/2.
+:- multifile pce_post_expansion_hook/2.
+
+
+:- dynamic prolog_load_file/2.
+:- multifile prolog_load_file/2.
+
+
+produto_intermedio(A) :-
+	elsX(B),
+	member(A, B),
+	elsY(C),
+	member(A, C).
+
+:- dynamic portray/1.
+:- multifile portray/1.
+
+portray(A) :-
+    pce_portray:
+    (   A= @B,
+	object(A), !,
+	(   send(A, '_instance_of'(var))
+	->  get(A, '_value', C),
+	    format('@~w(= ~p)', [B, C])
+	;   get(A, '_class_name', D),
+	    format('@~w/~w', [B, D])
+	)
+    ).
+portray(pce_principal:send_implementation(B, D, A)) :-
+    pce_portray:
+    (   object(A), !,
+	method_from_id(B,  (C->_)),
+	format('Send-method on ~p: ~w->~p', [A, C, D])
+    ).
+portray(pce_principal:get_implementation(B, D, A, E)) :-
+    pce_portray:
+    (   object(A), !,
+	method_from_id(B, <-(C, _)),
+	format('Get-method on ~p: ~w<-~p --> ~p',
+	       [A, C, D, E])
+    ).
+
+gerar_elemento :-
+	elsX(A),
+	elsY(B),
+	append(A, B, C),
+	sort(C, D),
+	gera(D).
+
+elsY(C) :-
+	findall(A, componente(_, A, _), B),
+	sort(B, C).
+
+:- dynamic componente/2.
+
+
+produto_base(A) :-
+	elsY(B),
+	member(A, B),
+	elsX(C),
+	\+ member(A, C).
+
+nivel(B, D, F) :-
+	produto_final(A),
+	bfs(A, B, C),
+	count(C, G),
+	bfs(A, D, E),
+	count(E, H),
+	F is abs(G-H).
+
+:- dynamic custo/2.
+
+
+:- dynamic prolog_file_type/2.
+:- multifile prolog_file_type/2.
+
+prolog_file_type(pl, prolog).
+prolog_file_type(prolog, prolog).
+prolog_file_type(qlf, prolog).
+prolog_file_type(qlf, qlf).
+prolog_file_type(A, executable) :-
+	system:current_prolog_flag(shared_object_extension, A).
+
+:- dynamic resource/3.
+:- multifile resource/3.
+
+
+produto_final(A) :-
+	elsX(B),
+	member(A, B),
+	elsY(C),
+	\+ member(A, C).
+
+:- dynamic expand_query/4.
+:- multifile expand_query/4.
+
