@@ -131,6 +131,76 @@ count([_|T],N):- count(T,N1), N is N1+1.
 
 nivel(ElemX,ElemY,Nvl):- produto_final(X),bfs(X,ElemX,CamX),count(CamX,NX), bfs(X,ElemY,CamY),count(CamY,NY) ,Nvl is abs( NX - NY).
 
+%8
+
+reg_custo(Elemento,Custo):- custo(Elemento,_) -> (retract(custo(Elemento,_)), assert(custo(Elemento,Custo))) ; assert(custo(Elemento,Custo)).
+
+%9
+%retorna lista de todos os compenentes e subcomponentes de um produto
+list([],[]).
+list([H|T],L):-findall(Y, componente(H,Y,_), L1),
+    list(L1,L2), list(T,L3),
+    append(L2,L3,R1), append([H],R1,L).
+listaProds(Elemento,L):- list([Elemento],L).
+
+%filtra lista de elementos sem custo
+semCusto([],[]).
+semCusto([H|T],LSemCusto):-
+    ((\+custo(H,_);custo(H,0))->
+    LSemCusto = [H|Sem] ;
+    LSemCusto = Sem), semCusto(T, Sem).
+
+%verifica se todos os elementos de uma lista tem custo
+verificaCusto([]).
+verificaCusto([H|T]):-custo(H,_),verificaCusto(T).
+
+%filtra lista de elementos base
+listaBase([],[],[]).
+listaBase([H|T],Base,Resto):-
+    (produto_base(H) ->
+    (   Base = [H|B], listaBase(T,B,Resto));
+    (   Resto = [H|R], listaBase(T,Base,R))).
+
+%os componentes base que nao tem custo ficam com o custo a 0
+geraCustoBase([]).
+geraCustoBase([H|T]):-
+    reg_custo(H,0),
+    geraCustoBase(T).
+
+
+%soma custo dos elementos de uma lista
+somaCusto(_,[],0).
+somaCusto(X,[H|T],Valor):-somaCusto(X,T,Valor1), custo(H,V), componente(X,H,Qtd),
+    Vcomp is V*Qtd,
+    Valor is Valor1 + Vcomp.
+
+%calcula custo de um produto baseado nos seus componentes
+calcCusto([]).
+calcCusto([H|T]):- findall(Y,componente(H,Y,_),L),
+    ((verificaCusto(L)) ->
+    (   somaCusto(H,L,Valor), reg_custo(H,Valor),calcCusto(T)) ;
+    (   append(T,[H],L1),calcCusto(L1))).
+
+
+calc(Elemento, Valor, ListaSemCusto):-
+    %poe em AllChildsList a lista de todos os componentes e subcomponentes do produto Elemento
+    listaProds(Elemento,AllChildsList),
+    %filtra AllChildsList de forma a ficar em ListaTotalSemCusto os produtos sem custo atribuido
+    semCusto(AllChildsList,ListaTotalSemCusto),
+    %filtra ListaTotalSemCusto de forma a ficar em ListaSemCusto1 os produtos base sem custo atribuido
+    listaBase(ListaTotalSemCusto,ListaSemCusto1,_),
+    %Gera um custo 0 para todos os elementos na lista ListaSemCusto1
+    geraCustoBase(ListaSemCusto1),
+    %filtra AllChildsList de forma a ficar em Resto os produtos sem custo que nao sao base
+    listaBase(AllChildsList,_,Resto),
+    %para cada elemento da lista Resto calcula o seu custo baseado nos seus subcomponentes
+    calcCusto(Resto),
+    %poe o custo do Elemento em Valor
+    custo(Elemento,Valor),
+    %retira repeticoes da lista ListaSemCusto
+    sort(ListaSemCusto1,ListaSemCusto).
+
+
 %13 predicado de imprimir
 
 guardarBaseConhecimento(Nome):- tell(Nome), listing, told.
