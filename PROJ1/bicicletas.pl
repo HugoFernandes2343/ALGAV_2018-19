@@ -147,8 +147,8 @@ listaProds(Elemento,L):- list([Elemento],L).
 semCusto([],[]).
 semCusto([H|T],LSemCusto):-
     ((\+custo(H,_);custo(H,0))->
-    LSemCusto = [H|Sem] ;
-    LSemCusto = Sem), semCusto(T, Sem).
+    (   LSemCusto = [H|Sem]) ;
+    (   LSemCusto = Sem)), semCusto(T, Sem).
 
 %verifica se todos os elementos de uma lista tem custo
 verificaCusto([]).
@@ -181,8 +181,13 @@ calcCusto([H|T]):- findall(Y,componente(H,Y,_),L),
     (   somaCusto(H,L,Valor), reg_custo(H,Valor),calcCusto(T)) ;
     (   append(T,[H],L1),calcCusto(L1))).
 
+%apaga o custo dos elementos que tem valor 0
+apagaCustos([]).
+apagaCustos([H|T]):-(custo(H,0) ->
+                    (   retract(custo(H,0)), apagaCustos(T));
+                    (   apagaCustos(T))).
 
-calc(Elemento, Valor, ListaSemCusto):-
+calc_custo(Elemento, Valor, ListaSemCusto):-
     %poe em AllChildsList a lista de todos os componentes e subcomponentes do produto Elemento
     listaProds(Elemento,AllChildsList),
     %filtra AllChildsList de forma a ficar em ListaTotalSemCusto os produtos sem custo atribuido
@@ -198,7 +203,42 @@ calc(Elemento, Valor, ListaSemCusto):-
     %poe o custo do Elemento em Valor
     custo(Elemento,Valor),
     %retira repeticoes da lista ListaSemCusto
-    sort(ListaSemCusto1,ListaSemCusto).
+    sort(ListaSemCusto1,ListaSemCusto),
+    %apaga custos de valor 0
+    apagaCustos(AllChildsList).
+
+%10
+%
+somaQtd([_|[]],1).
+somaQtd([H,M|T],Soma):-somaQtd([M|T], Soma1), componente(H,M,V), Soma is Soma1*V.
+
+checkCusto(E, Valor):- custo(E,_)-> (custo(E,Valor));(Valor is 0).
+
+constroiListaElementos(_,_,[],[]).
+constroiListaElementos(X,Nr,[H|T], L):-constroiListaElementos(X,Nr,T,L1),
+    bfs(X,H,Cam),
+    somaQtd(Cam,Qtd1),Qtd is Qtd1*Nr,
+    checkCusto(H,V1), Custo is V1*Qtd,
+    append([[H,Qtd,Custo]],L1,L).
+
+compareList(R, [_,_,C1],[_,_,C2]):- C1>=C2 -> R = < ; R = > .
+ordenaLista(L,Res):-predsort(compareList,L,Res).
+
+imprime([]).
+imprime([H|T]):-write(H),nl,imprime(T).
+
+lista_materiais(Elemento,Qtd):-
+    print(Elemento : Qtd),nl,
+    print('-------------------------------------'),nl,
+    listaProds(Elemento,AllList),
+    listaBase(AllList,ListaBase,_),
+    constroiListaElementos(Elemento,Qtd,ListaBase,L),
+    %write('l'=L),nl,
+    ordenaLista(L,Res),imprime(Res).
+
+
+
+
 
 
 %13 predicado de imprimir
