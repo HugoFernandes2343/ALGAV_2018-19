@@ -131,6 +131,28 @@ count([_|T],N):- count(T,N1), N is N1+1.
 
 nivel(ElemX,ElemY,Nvl):- produto_final(X),bfs(X,ElemX,CamX),count(CamX,NX), bfs(X,ElemY,CamY),count(CamY,NY) ,Nvl is abs( NX - NY).
 
+
+%7
+elementosProf(_,[],(_,0),(_,0)).
+elementosProf(Elem, [H|T], (Max1,Prof1), (Max2,Prof2)):-
+    elementosProf(Elem,T,(Max1d,Prof1d),(Max2d,Prof2d)),
+    bfs(Elem,H,Cam),
+    count(Cam,Cnt),
+    (Cnt>Prof1d ->
+    (   Max1 = H, Prof1 = Cnt, Max2 = Max2d, Prof2 = Prof2d);
+    (   Max1 = Max1d, Prof1 = Prof1d, (Cnt>Prof2d ->
+        (   Max2 = H, Prof2 = Cnt);
+        (   Max2 = Max2d, Prof2 = Prof2d)))).
+
+
+dois_mais_profundos(ElementoRaiz,(EMax1,Prof1),(EMax2,Prof2)):-
+    listaProds(ElementoRaiz, AllList),
+    listaBase(AllList, AllBase,_),
+    elementosProf(ElementoRaiz, AllBase, (EMax1,Prof1),(EMax2,Prof2)).
+
+
+
+
 %8
 
 reg_custo(Elemento,Custo):- custo(Elemento,_) -> (retract(custo(Elemento,_)), assert(custo(Elemento,Custo))) ; assert(custo(Elemento,Custo)).

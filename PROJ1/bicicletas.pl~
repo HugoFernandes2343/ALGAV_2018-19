@@ -217,8 +217,8 @@ checkCusto(E, Valor):- custo(E,_)-> (custo(E,Valor));(Valor is 0).
 constroiListaElementos(_,_,[],[]).
 constroiListaElementos(X,Nr,[H|T], L):-constroiListaElementos(X,Nr,T,L1),
     bfs(X,H,Cam),
-    somaQtd(Cam,Qtd),
-    checkCusto(H,V1), Custo is V1*Qtd*Nr,
+    somaQtd(Cam,Qtd1),Qtd is Qtd1*Nr,
+    checkCusto(H,V1), Custo is V1*Qtd,
     append([[H,Qtd,Custo]],L1,L).
 
 compareList(R, [_,_,C1],[_,_,C2]):- C1>=C2 -> R = < ; R = > .
