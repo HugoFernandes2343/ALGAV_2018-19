@@ -11,7 +11,7 @@ city(tirana,41.33165,19.8318).
 city(andorra,42.5075025,1.5218033).
 city(vienna,48.2092062,16.3727778).
 city(minsk,53.905117,27.5611845).
-/*city(sarajevo,43.85643,18.41342).
+city(sarajevo,43.85643,18.41342).
 city(sofia,42.6976246,23.3222924).
 city(zagreb,45.8150053,15.9785014).
 city(nicosia,35.167604,33.373621).
@@ -55,7 +55,7 @@ city(madrid,40.4166909,-3.7003454).
 city(stockholm,59.3327881,18.0644881).
 city(bern,46.9479986,7.4481481).
 city(kiev,50.440951,30.5271814).
-city(cardiff,51.4813069,-3.1804979).*/
+city(cardiff,51.4813069,-3.1804979).
 
 %  dist_cities(brussels,prague,D).
 %  D = 716837.
