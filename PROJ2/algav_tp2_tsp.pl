@@ -6,17 +6,17 @@
 % ------------------------------------------------------------------------
 
 %city(name,latitude,longitude)
-city(a,40,40).
-city(b,80,40).
-city(c,90,60).
-city(d,40,100).
-city(e,60,70).
-/*city(brussels,50.8462807,4.3547273).
+/*city(a,4,4).
+city(b,8,4).
+city(c,9,6).
+city(d,4,9).
+city(e,7,6).*/
+city(brussels,50.8462807,4.3547273).
 city(tirana,41.33165,19.8318).
 city(andorra,42.5075025,1.5218033).
 city(vienna,48.2092062,16.3727778).
 city(minsk,53.905117,27.5611845).
-city(sarajevo,43.85643,18.41342).
+/*city(sarajevo,43.85643,18.41342).
 city(sofia,42.6976246,23.3222924).
 city(zagreb,45.8150053,15.9785014).
 city(nicosia,35.167604,33.373621).
@@ -91,7 +91,7 @@ distance(Lat1, Lon1, Lat2, Lon2, Dis2):-
 %
 
 
-%--------------Iteração 1----------------------
+%----------------------------Iteração 1------------------------------------
 
 /*
  usa findall com o permutation para gerar uma lista de todos os caminhos
@@ -160,13 +160,13 @@ caminho(Orig,Dest,Cam,Custo):- cidades(L), length(L,Nr),
 
 tsp1(Origem, ListaCaminhos, Distancia):-
     %Poe em Lista todas as cidades possiveis menos a original
-    cidades(Lista,Cid),
+    cidades(Lista,Origem),
     %ve qual a cidade mais proxima da Inicial
-    cidMaisProxima(Cid,Lista,CidMaisProx,_),
+    cidMaisProxima(Origem,Lista,CidMaisProx,_),
     %faz o caminho inicial-(todas)-cidadeMaisProxima-inicial e calcula a distancia
-    caminho(Origem, CidMaisProx, ListaCaminhos, Distancia).
+    caminho(Origem, CidMaisProx, ListaCaminhos, Distancia),!.
 
-it1Tempo(Origem,Lista,Dist):-time(tsp1(Origem,Lista,Dist)).
+it1Tempo(Origem,Lista,Dist):-time(tsp1(Origem,Lista,Dist)),!.
 
 /*
  * Analise tempo it1
@@ -179,7 +179,7 @@ it1Tempo(Origem,Lista,Dist):-time(tsp1(Origem,Lista,Dist)).
 */
 
 
-%--------------Iteração 2----------------------
+%----------------------------Iteração 2------------------------------------
 
 caminhoMaisProx(_,[],[]).
 caminhoMaisProx(Cid,CidadesAVisitar,Caminho):-
@@ -193,5 +193,159 @@ tsp2(Origem, ListaCaminhos, Dist):-
     caminhoMaisProx(Origem,ListaCidades,CaminhoInc),
     append([Origem],CaminhoInc,L1),
     append(L1,[Origem],ListaCaminhos),
-    calcCusto(ListaCaminhos,Dist).
+    calcCusto(ListaCaminhos,Dist),!.
 
+
+%----------------------------Iteração 3------------------------------------
+
+
+% Given three colinear points p, q, r, the function checks if
+% point q lies on line segment 'pr'
+%onSegment(P, Q, R)
+onSegment((PX,PY), (QX,QY), (RX,RY)):-
+    QX =< max(PX,RX),
+    QX >= min(PX,RX),
+    QY =< max(PY,RY),
+    QY >= min(PY,RY).
+
+% To find orientation of ordered triplet (p, q, r).
+% The function returns following values
+% 0 --> p, q and r are colinear
+% 1 --> Clockwise
+% 2 --> Counterclockwise
+orientation((PX,PY), (QX,QY), (RX,RY), Orientation):-
+	Val is (QY - PY) * (RX - QX) - (QX - PX) * (RY - QY),
+	(Val == 0, !, Orientation is 0;
+	Val >0, !, Orientation is 1;
+        Orientation is 2).
+orientation4cases(P1,Q1,P2,Q2,O1,O2,O3,O4):-
+    orientation(P1, Q1, P2,O1),
+    orientation(P1, Q1, Q2,O2),
+    orientation(P2, Q2, P1,O3),
+    orientation(P2, Q2, Q1,O4).
+
+% The main function that returns true if line segment 'p1q1'
+% and 'p2q2' intersect.
+doIntersect(P1,Q1,P2,Q2):-
+    % Find the four orientations needed for general and
+    % special cases
+	orientation4cases(P1,Q1,P2,Q2,O1,O2,O3,O4),
+	(
+    % General case
+    O1 \== O2 , O3 \== O4,!;
+    % Special Cases
+    % p1, q1 and p2 are colinear and p2 lies on segment p1q1
+    O1 == 0, onSegment(P1, P2, Q1),!;
+    % p1, q1 and p2 are colinear and q2 lies on segment p1q1
+    O2 == 0, onSegment(P1, Q2, Q1),!;
+    % p2, q2 and p1 are colinear and p1 lies on segment p2q2
+    O3 == 0, onSegment(P2, P1, Q2),!;
+     % p2, q2 and q1 are colinear and q1 lies on segment p2q2
+    O4 == 0, onSegment(P2, Q1, Q2),!).
+
+
+%----------------------------------------------------------------------------------------------------
+% rGraph(Origin,UnorderedListOfEdges,OrderedListOfEdges)
+%
+% Examples:
+% ---------
+% ?- rGraph(a,[[a,b],[b,c],[c,d],[e,f],[d,f],[e,a]],R).
+%
+% ?- rGraph(brussels,[[vienna, sarajevo], [sarajevo, tirana],[tirana,sofia], [sofia, minsk], [andorra,brussels],[brussels,minsk],[vienna,andorra]],R).
+%
+rGraph(Orig,[[Orig,Z]|R],R2):-!,
+	reorderGraph([[Orig,Z]|R],R2).
+rGraph(Orig,R,R3):-
+	member([Orig,X],R),!,
+	delete(R,[Orig,X],R2),
+	reorderGraph([[Orig,X]|R2],R3).
+rGraph(Orig,R,R3):-
+	member([X,Orig],R),
+	delete(R,[X,Orig],R2),
+	reorderGraph([[Orig,X]|R2],R3).
+
+
+reorderGraph([],[]).
+reorderGraph([[X,Y],[Y,Z]|R],[[X,Y]|R1]):-
+	reorderGraph([[Y,Z]|R],R1).
+reorderGraph([[X,Y],[Z,W]|R],[[X,Y]|R2]):-
+	Y\=Z,
+	reorderGraph2(Y,[[Z,W]|R],R2).
+reorderGraph2(_,[],[]).
+reorderGraph2(Y,R1,[[Y,Z]|R2]):-
+	member([Y,Z],R1),!,
+	delete(R1,[Y,Z],R11),
+	reorderGraph2(Z,R11,R2).
+reorderGraph2(Y,R1,[[Y,Z]|R2]):-
+	member([Z,Y],R1),
+	delete(R1,[Z,Y],R11),
+	reorderGraph2(Z,R11,R2).
+
+
+converteSegmentos([_|[]], []).
+converteSegmentos([H,S|T], Res):-converteSegmentos([S|T],Res1),append([[H,S]],Res1,Res).
+converteCaminhos([[H,T]],[H,T]).
+converteCaminhos([[H1|_]|T],Res):-converteCaminhos(T,Res1), append([H1],Res1,Res).
+
+cruzaVerif([H,T],L):-(member(H,L);member(T,L)).
+
+cruza([Seg1a,Seg1b],[Seg2a,Seg2b]):-
+    city(Seg1a,Seg1ax,Seg1ay),
+    city(Seg1b,Seg1bx,Seg1by),
+    city(Seg2a,Seg2ax,Seg2ay),
+    city(Seg2b,Seg2bx,Seg2by),
+    (doIntersect((Seg1ax,Seg1ay),(Seg1bx,Seg1by),(Seg2ax,Seg2ay),(Seg2bx,Seg2by)) ->
+    (   cruzaVerif([Seg1a,Seg1b],[Seg2a,Seg2b]) -> (!,false);(!,true));
+    (   !,false)).
+
+% verifica se um segmento cruza com algum segmento de uma lista, retorna
+% false se nao cruzar e true se cruzar
+verif(_,[],[]):-!,false.
+verif(Seg,[H|T],Res):-
+    (cruza(Seg,H) ->
+    (   !,Res = [Seg,H],true);
+    (   verif(Seg,T,Res))).
+% verifica todos os segmentos de uma lista, os primeiros segmentos
+% cruzados que encontrar sao guardados
+verificaCaminho([],_):-!,false.
+verificaCaminho([H,S|T],Res):-
+    (verif(H,[S|T],Res1) ->
+    (   !,Res = Res1,true);
+    (   verificaCaminho([S|T],Res))).
+
+%verifica se o segmento dado exista na lista Excl
+naoMembro([H,T],Excl):-(\+member([H,T],Excl), \+member([T,H],Excl)).
+
+% resolve cruzamentos, começa por pegar na primeira cidade do segmento
+% A, verifica qual das cidades do Segmento B é mais proxima e gera 1 de
+% 2 combinacoes possiveis
+% De seguida verifica se o par de segmentos gerado nao existe no
+% caminho, usando a 2 combinaçao possivel se ja existir
+resolveCruzamentos([[H1,T1],[H2,T2]],Excl,Res):-
+    dist_cities(H1,H2,C1),
+    dist_cities(H1,T2,C2),
+    (C1<C2 ->
+    (   (naoMembro([H1,H2],Excl), naoMembro([T1,T2],Excl)) ->
+        (   Res=[[H1,H2],[T1,T2]]);
+        (   Res=[[H1,T2],[H2,T1]]));
+    (   (naoMembro([H1,T2],Excl), naoMembro([H2,T1],Excl)) ->
+        (   Res=[[H1,T2],[H2,T1]]);
+        (   Res=[[H1,H2],[T1,T2]]))).
+
+% percorre o caminho verificando se existe cruzamentos, caso exista
+% resolve com o predicado acima e chama-se a si mesmo outra vez com o
+% novo caminho
+constroi(Cam,Res):-
+    (verificaCaminho(Cam,Seg) ->
+    (   resolveCruzamentos(Seg,Cam,Resolv), findall(X,(member(X,Cam),\+member(X,Seg)),PathInc), append(PathInc,Resolv,Res1), constroi(Res1,Res));
+    (   !,Res=Cam,true)).
+
+
+tsp3(Cid,Cam,Dist):- tsp2(Cid,Path1,_),
+
+    converteSegmentos(Path1,Path),
+    constroi(Path,Res),
+    (rGraph(Cid,Res,Cam1) ->
+    (   converteCaminhos(Cam1,Cam));
+    (   Cam1 = Res, converteCaminhos(Cam1,Cam))),
+    calcCusto(Cam,Dist),!.

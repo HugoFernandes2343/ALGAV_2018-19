@@ -8,7 +8,6 @@
 %city(name,latitude,longitude)
 city(a,40,40).
 city(b,80,40).
-
 city(c,90,60).
 city(d,40,100).
 city(e,60,70).
