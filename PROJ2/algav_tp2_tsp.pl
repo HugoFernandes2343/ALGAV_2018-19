@@ -21,7 +21,7 @@ city(sofia,42.6976246,23.3222924).
 city(zagreb,45.8150053,15.9785014).
 city(nicosia,35.167604,33.373621).
 city(prague,50.0878114,14.4204598).
-city(copenhagen,55.6762944,12.5681157).
+/*city(copenhagen,55.6762944,12.5681157).
 city(london,51.5001524,-0.1262362).
 city(tallinn,59.4388619,24.7544715).
 city(helsinki,60.1698791,24.9384078).
@@ -60,7 +60,7 @@ city(madrid,40.4166909,-3.7003454).
 city(stockholm,59.3327881,18.0644881).
 city(bern,46.9479986,7.4481481).
 city(kiev,50.440951,30.5271814).
-city(cardiff,51.4813069,-3.1804979).
+city(cardiff,51.4813069,-3.1804979).*/
 
 %  dist_cities(brussels,prague,D).
 %  D = 716837.
@@ -342,7 +342,6 @@ constroi(Cam,Res):-
 
 
 tsp3(Cid,Cam,Dist):- tsp2(Cid,Path1,_),
-
     converteSegmentos(Path1,Path),
     constroi(Path,Res),
     (rGraph(Cid,Res,Cam1) ->
@@ -355,29 +354,33 @@ tsp3(Cid,Cam,Dist):- tsp2(Cid,Path1,_),
 
 %----------------------------Iteração4-------------------------------------
 
-escreve([]):-!.
-escreve([H|T]):- tab(2),writeln(H;''), escreve(T).
-escreveLista(Cab,L):- writeln(Cab:''), escreve(L).
-
 %parametros
 
 
-geracoes(500).
+geracoes(200).
 populacao(200).
-crossover(1).
-mutation(0.01).
+crossover(0.7).
+mutation(0.3).
+
 
 gera(Origem):-
+    %gera populacao inicial
     gera_populacao(Origem,Pop),
+    %verifica o nr das geracoes
     geracoes(Grc),
+    %passa para a geracao seguinte
     gera(Pop,Grc,0,_,0).
+
 
 gera(_,0,_,_,_):-!.
 gera(Pop,Geracoes,Contador,MelhorCamSempre,MelhorDistSempre):-
+    %avalia a populacao currente
     avalia_populacao(Pop,[[Dist,Cam]|_], Media,Pop1,PopProb),
+    %verifica se o recorde de melhor distancia foi batido
     ((Dist<MelhorDistSempre;MelhorDistSempre==0)->
     (   MelhorCamSempre1 =Cam, MelhorDistSempre1 = Dist);
     (   MelhorCamSempre1=MelhorCamSempre, MelhorDistSempre1=MelhorDistSempre)),
+    %imprime valores
     write('Geracao: '), writeln(Contador),
     write('Media desta geracao: '), writeln(Media),
     write('Melhor Caminho desta Geracao: '), writeln(Cam),
@@ -385,25 +388,29 @@ gera(Pop,Geracoes,Contador,MelhorCamSempre,MelhorDistSempre):-
     writeln('---------------------------------'),
     write('Melhor Caminho: '), writeln(MelhorCamSempre1),
     write('Melhor Distancia: '), writeln(MelhorDistSempre1),nl,
-    gera_geracao(Pop1,PopProb,NewPop1),
-    mutate(NewPop1,NewPop),
+    %gera nova geracao
+    gera_geracao(Pop1,PopProb,NewPop),
+    %diminui contador
     Geracoes1 is Geracoes - 1,
+    %aumenta nr de geracoes
     Contador1 is Contador + 1,!,
+    %repete para a nova geracao
     gera(NewPop,Geracoes1,Contador1,MelhorCamSempre1,MelhorDistSempre1).
-
-
 
 
 
 %--------------Gera Populacao Inicial--------------
 
 gera_populacao(Origem,Pop):-
+    %verifica qual o tamanho de uma populacao
     populacao(TamPop),
+    %ve quantas cidades sao usadas
     findall(City,city(City,_,_),ListaCidades),
     length(ListaCidades,NrCidades),
+    %gera populacao
     gera_populacao(Origem,TamPop,ListaCidades,NrCidades,Pop).
-    %escreveLista('Pop',Pop).
 
+%gera Populacao inicial, usa como um dos membros o resultado da it3
 gera_populacao(Origem,1,_,_,Pop):-tsp3(Origem,Cam,_),Pop = [Cam],!.
 %gera_populacao(_,0,_,_,[]):-!.
 gera_populacao(Origem,TamPop,ListaCidades,NrCidades,Pop):-
@@ -413,49 +420,44 @@ gera_populacao(Origem,TamPop,ListaCidades,NrCidades,Pop):-
     gera_individuo(Origem,Ind),
     append([Ind],Pop1,Pop).
 
-% recebe as cidades intermedias e a origem, constroi o caminho e testa
-% se esse caminho ja existe na lista Excl
-% se ja existir retorna
-naoMembroOrig(Origem,Cam,Excl):-append([Origem|Cam],[Origem],Test),\+member(Test,Excl).
-/*list_check([],_):-false.
-list_check([H|_], H).
-verifTamanho(A,B):-length(A,Xa),length(B,Xa).*/
-/*gera_individuo(Origem,Pop,Ind):-
-    findall(City,(city(City,_,_), City\==Origem), CidadesMenosOriginal),
-    (findall(Cam, (permutation(CidadesMenosOriginal,Cam),naoMembroOrig(Origem,Cam,Pop)),[Inc|_])->
-    findall(Cam, (random_permutation(CidadesMenosOriginal,Cam),naoMembroOrig(Origem,Cam,Pop)),Permuts),
-    (list_check(Permuts,Inc)->
-    (findnsols(1,Cam, (random_permutation(CidadesMenosOriginal,Cam),verifTamanho(CidadesMenosOriginal,Cam),naoMembroOrig(Origem,Cam,Pop)),Inc)->
-    (   append([Origem|Inc],[Origem],Ind),true);
-    (   writeln('População demasiado elevada para o nr de cidades disponível'),!,false)).*/
-
+%gera Individuo de forma random
 gera_individuo(Origem,Ind):-
     findall(City,(city(City,_,_), City\==Origem), CidadesMenosOriginal),
     random_permutation(CidadesMenosOriginal,Inc),
     append([Origem|Inc],[Origem],Ind).
 
 %--------------Avalia Populacao--------------
-
+% comparacao para ordenar a lista de caminhos de forma ao mais curto
+% ficar em 1º lugar
 compareList(R, [C1,_],[C2,_]):- C1>=C2 -> R = > ; R = < .
 ordenaLista(L,Res):-predsort(compareList,L,Res).
 
+% avalia uma populacao, recebe uma lista de listas de caminhos e calcula
+% a distancia de cada um deles, construindo uma lista (Res) em que cada
+% elemento tem o formato [Dist,[Cam]], assim como a soma total da
+% distancia de todos os caminhos, a soma de todos os fitness e o nr de
+% caminhos
 avalia([],[],0,0,0).
 avalia([H|T],Res,SomaDist,SomaFit,Nr):-avalia(T,Res1,SomaDist1,SomaFit1,Nr1), calcCusto(H,Dist),
     append(Res1,[[Dist,H]],Res), SomaDist is SomaDist1 + Dist, Nr is Nr1+1, FitCurr is 1/Dist, SomaFit is SomaFit1 + FitCurr.
 
-normaliza([],_,_,[],[]).
-normaliza([[Dist,S]|T],Soma,Fitness,ListaPop,ListaProb):-
-    normaliza(T,Soma,Fitness,ListaPop1,ListaProb1),
+% normaliza a lista, transforma a distancia de cada caminho na sua
+% probabilidade de ser escolhido. Retorna uma lista de caminhos e uma
+% lista de probabilidades
+normaliza([],_,[],[]).
+normaliza([[Dist,S]|T],Fitness,ListaPop,ListaProb):-
+    normaliza(T,Fitness,ListaPop1,ListaProb1),
     FitCurr is 1 / Dist, %Fitness é maior quanto mais baixa for a distancia
     Norm is FitCurr / Fitness,
     append([S],ListaPop1,ListaPop),
     append([Norm],ListaProb1,ListaProb).
 
+%
 avalia_populacao(Pop, PopAval, Media,ListaPop,ListaProb):-
     avalia(Pop,PopNotSort,SomaDist,SomaFit,Nr),
     Media is SomaDist / Nr,
     ordenaLista(PopNotSort,PopAval),
-    normaliza(PopAval,SomaDist,SomaFit,ListaPop,ListaProb).
+    normaliza(PopAval,SomaFit,ListaPop,ListaProb).
 
 
 %--------------Gerar Descendentes--------------
@@ -475,22 +477,35 @@ choice([X], [P], Cumul, Rand, X) :-
 choice(Xs, Ps, Y) :- random(R), choice(Xs, Ps, 0, R, Y).
 
 
+% gera descendentes , verifica a probabilidade de crossover e de
+% mutacao, escolhe um pai da geracao anterior com base na sua fitness,
+% testa a probabilidade de haver crossover e caso haja escolhe um
+% segundo pai para fazer crossover. Caso falhe entao testa a
+% rpobabilidade de haver mutacao. Em ultimo caso e falhando as duas
+% probabilidades acima copia esse parente da geracao anterior para a
+% proxima
 gera_descendentes(0,_,_,[]):-!.
 gera_descendentes(Nr,Pais,Prob,NovaPop):-
     crossover(CrossProb),
+    mutation(MutProb),
     Nr1 is Nr-1,
     gera_descendentes(Nr1,Pais,Prob,NovaPop1),
     choice(Pais,Prob,A),
     (maybe(CrossProb)->
     (   choice(Pais,Prob,B), crossover(A,B,Desc));
-    (   Desc = A)),
+    (   (maybe(MutProb) ->
+        (   mutateCam(A,Desc));
+        (   Desc = A)))),
     append([Desc],NovaPop1,NovaPop).
 
-
+%
 gera_geracao(Pais,Prob,NovaPop):-
         populacao(Nr),
         gera_descendentes(Nr,Pais,Prob,NovaPop).
 
+% crossover e feito gerando um nr entre 1 e tamanho maximo do caminho.
+% Depois seleciona do principio do parente A ate ao nr gerada,
+% preenchendo o resto do novo caminho com o resto do parente B
 crossover([H|T],B,Res):-
     cidades(L),length(L,Max1),Max is Max1 - 1,
     random(1,Max,CrossPoint),
@@ -521,10 +536,10 @@ swap(As,I,J,Cs) :-
    length(BeforeI,I),
    length(BeforeJ,J).
 
-
-%gera2Nr(Max,A,B):-Max1 is Max -1,random(1,Max1,A),random(1,Max1,B),A\==B,!.
+%gera dois nr entre 1 e Max
 gera2Nr(Max,A,B):- findall(X,(between(1,2,_),random(1,Max,X)), [A,B]).
-
+% usa predicado acima para gerar dois numeros e depois troca os dois
+% elementos que estao nesses indices
 mutateCam(Cam,New):-cidades(L),length(L,Max),gera2Nr(Max,A,B),swap(Cam,A,B,New).
 
 mutateList(_,[],[]).
@@ -536,4 +551,5 @@ mutateList(Prob,[H|T],NewPop):-mutateList(Prob,T,NewPop1),
 mutate(Pop,NewPop):-
     mutation(MutProb),
     mutateList(MutProb,Pop,NewPop).
+
 
