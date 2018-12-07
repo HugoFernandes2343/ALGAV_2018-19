@@ -1,3 +1,15 @@
+linha(a,1).
+linha(b,2).
+linha(c,3).
+linha(d,4).
+linha(e,5).
+linha(f,6).
+linha(g,7).
+linha(h,8).
+
+coluna(1).
+coluna(2).
+coluna(3).
 coluna(4).
 coluna(5).
 coluna(6).
@@ -36,10 +48,10 @@ play :-
     write('===================='), nl,
     write('=      Othello     ='), nl,
     write('===================='), nl, nl,
-    write('Nota: p começa o jogo'), nl,
+    write('Nota: x começa o jogo'), nl,
     playerMark.
 
-	% playAskColor
+% playAskColor
 % Ask the color for the human player and start the game with it.
 playerMark:-
 	  repeat,
@@ -50,7 +62,9 @@ playerMark:-
 	  draw(B), nl,
           play([p, B], Player).
 
-
+%retorna todas as jogadas possiveis para o jogador dado
+jogadasPossiveis(Player, Tab, Poss):-
+    findall([X,Y], (between(1,8,X), between(1,8,Y), joga([X,Y], Player, Tab, _)), Poss).
 
 %quando é o jogador a jogar
 play([HumanPlayer, Tab], HumanPlayer):- jogadasPossiveis(HumanPlayer, Tab, Poss),
@@ -80,8 +94,34 @@ play([HumanPlayer, Tab], HumanPlayer):- jogadasPossiveis(HumanPlayer, Tab, Poss)
      ).
 
 
+%quando é o computador a jogar
+play([Player,Tab], HumanPlayer):- jogadasPossiveis(Player, Tab, Poss),
+    (is_empty(Poss) ->
+    (   writeln('Sem Jogadas Possiveis.'), ProxTab = Tab );
+    (
+      computerPlay( Poss, Jogada),
+      joga(Jogada, Player, Tab, ProxTab),
+      writeln('O tabuleiro do computador: '),
+      draw(ProxTab), nl
+    )),
+    jogador(Player, HumanPlayer),
+    (scoreboard(ProxTab)->
+    (   writeln('Fim do jogo.'),!);
+    (   !,play([HumanPlayer,ProxTab], HumanPlayer) )).
+
+%computador joga
+computerPlay( JogadasPoss, Jogada):-random_member(Jogada, JogadasPoss).
 
 
+% recebe tabuleiro, calcula e escreve pontuacao na consola e verifica se
+% o jogo acabou
+scoreboard(ProxTab):-
+    calcPontuacao(ProxTab, PlayerP, PlayerB, Empty),
+    writeln('Pontuação: '),
+    write('Player X: '), write(PlayerP), write('  |  '),
+    write('Player O: '), write(PlayerB), nl, nl,
+    decideVencedor(PlayerP, PlayerB, State),
+    ( Empty = 0, writeln(State) ).
 
 %recebe board, coverte de lista de listas para lista verifica cada casa
 calcPontuacao(Tab,PlayerP,PlayerB, CasasLivres):-flatten(Tab,List), calcPontuacao1(List, PlayerP, PlayerB, CasasLivres).
@@ -101,9 +141,9 @@ calcPontuacao1([H|T], PlayerP, PlayerB, CasasLivres):-calcPontuacao1(T, PlayerP1
 decideVencedor(PlayerP, PlayerB, Res):-
     Pont is PlayerB - PlayerP,
     (Pont > 0 ->
-    (   Res = 'p ganha!');
+    (   Res = 'x ganha!');
     (   (Pont < 0)->
-        (   Res = 'b ganha!');
+        (   Res = 'o ganha!');
         (   Res = 'Empate!'))
     ).
 
@@ -124,8 +164,8 @@ joga1(Coord,[Dir|T], Player, Tab, ProxTab):-
     (
      ( retornaCasa(Coord, Tab, 0),
        pintaDir(Coord,  Dir, Player, ProxTab1, ProxTab) )
-      ;
-      ProxTab = ProxTab1
+       ;
+       ProxTab = ProxTab1
     ).
 
 pintaDir([Lin, Col], [DirL, DirC], Player, Tab, ProxTab):-
@@ -153,8 +193,24 @@ pintaDir([Lin, Col], [DirL, DirC], Player, Tab, ProxTab):-
        pintaDir([NovaLin, NovaCol], [DirL, DirC], Player, ProxTab1, ProxTab) )
     ).
 
+%retorna conteudo da casa dado as suas coordenadas
+retornaCasa([Lin,Col], Board, ConteudoCasa):-
+    Lin1 is Lin-1, Col1 is Col-1,
+    nth0(Lin1,Board,LinhaInteira),
+    nth0(Col1,LinhaInteira,ConteudoCasa).
 
+%recebe board e pinta a casa indicada com a cor do Player
+pinta(Board, Player, [Lin1,Col1], NewBoard):-
+    Lin is Lin1 -1, Col is Col1 -1,
+    nth0(Lin, Board, Linha),
+    trocaPosicoesLista(Linha, Player, Col, NovaLinha),
+    trocaPosicoesLista(Board, NovaLinha, Lin, NewBoard).
 
+%dada uma lista troca o elemento em Index pelo ElementoNovo
+trocaPosicoesLista(Lista, ElementoNovo, Index, Res):-
+    append(AntesIndex, [_|Resto], Lista),
+    length(AntesIndex, Index),
+    append(AntesIndex, [ElementoNovo|Resto], Res),!.
 
 
 
@@ -219,4 +275,5 @@ show2(X) :-
 show2(X) :-
     X = p, !,
     write('X').
+
 
