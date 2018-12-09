@@ -1,3 +1,5 @@
+:-use_module(minimax).
+
 linha(a,1).
 linha(b,2).
 linha(c,3).
@@ -99,7 +101,8 @@ play([Player,Tab], HumanPlayer):- jogadasPossiveis(Player, Tab, Poss),
     (is_empty(Poss) ->
     (   writeln('Sem Jogadas Possiveis.'), ProxTab = Tab );
     (
-      computerPlay( Poss, Jogada),
+      %computerPlay( Poss, Jogada),
+      jogadaPc(Tab, Player, Jogada),
       joga(Jogada, Player, Tab, ProxTab),
       writeln('O tabuleiro do computador: '),
       draw(ProxTab), nl

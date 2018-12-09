@@ -1,0 +1,173 @@
+:-module(minimax, [jogadaPc/3]).
+
+%minimax com cortes alfa beta
+
+/*conta(Board, Player, Nr) :-
+    include(=(Player), Board, Lista), length(Lista, Nr).
+
+%usa minimax para decidir qual a jogada do pc
+jogadaPc(Board, Player, Coord):-
+    jogadasPossiveis(Player, Board, ListaJogadas),
+    jogadaPc1(ListaJogadas, Board, Player, _, _, [Coord,_]).
+jogadaPc1([], _,_,-100,100,[_,-100]):-!.
+jogadaPc1([H|T], Board, Player, Alfa, Beta, [Coord,Pont]):-
+    jogadaPc1(T, Board, Player, Alfa1, Beta1, [Coord1,Pont1]),
+    (
+        ((Beta1 =< Alfa1; (Beta1 = 100, Alfa1 = -100)),!,
+        minimax(H, Board, 0, Player, 4, [Alfa1, Alfa], [Beta1, Beta], [_, Pont2]),
+        (Pont2 > Pont1 ->
+        (   Coord = H, Pont = Pont2);
+        (   Coord = Coord1, Pont = Pont1)))
+        ;
+        (Coord = Coord1, Pont = Pont1, Alfa = Alfa1, Beta = Beta1)
+    ).
+
+
+%MinOrMax e 1 se estiver a maximizar ou 0 se estiver a minimizar
+minimax(Coord, Board, MinOrMax, Player, Prof, [Alfa, AlfaNext], [Beta, BetaNext], [NextCoord, Pont]):-
+    %ver qual o proximo jogador
+    jogador(Player, Outro),
+    %fazer jogada
+    joga(Coord, Player, Board, NextBoard),
+    jogadasPossiveis(Outro, NextBoard, ListaJogadasFilhas),
+    %preparar tabuleiro, passando de lista de listas para uma lista continua
+    flatten(NextBoard, B), (
+    %caso jogo acabe ou profundidade maxima atingida
+    (
+        (\+member(0, B); Prof = 0),!,
+        conta(B, Player, Nr),
+        Pont is Nr - 32,
+        NextCoord = Coord,
+        AlfaNext = Alfa,
+        BetaNext = Beta
+    )
+    ;
+    (
+        MinOrMax = 1,!,
+        max(ListaJogadasFilhas, NextBoard, Outro, Prof, [Alfa, AlfaNext1], Beta, [NextCoord, Pont]), AlfaNext = AlfaNext1, BetaNext = Beta
+    )
+    ;
+    (
+        MinOrMax = 0,!,
+        min(ListaJogadasFilhas, NextBoard, Outro, Prof, Alfa, [Beta, BetaNext1], [NextCoord, Pont]), AlfaNext = Alfa, BetaNext = BetaNext1
+    )).
+
+
+% parte max do algoritmo minimax, vai escolher a melhor jogada da lista
+% de jogadas fornecida
+% Se alfaNext for maior que beta entao para esta jogada a melhor posicao
+% ja foi descoberta e o resto das posicoes nao serao verificadas
+max([],_,_,_, [Alfa, Alfa], _,[_,-100]):-!.
+max([H|T], Board, Player, Prof, [Alfa, AlfaNext], Beta, [Coord,Max]):-
+    max(T, Board, Player, Prof, [Alfa, AlfaNext1], Beta, [Coord1,Max1]),
+    (   (
+        (Beta =< AlfaNext1; Beta = 100; AlfaNext1 = -100),!,
+        Prof1 is Prof -1,
+        minimax(H, Board, 0, Player, Prof1, [AlfaNext1,_],[Beta,_], [_, Max2]),
+        ((Max1>=Max2)->
+        (   Max=Max1, Coord = Coord1)
+        ;
+        (   Max=Max2, Coord = H)),
+        AlfaNext is max(Max2, AlfaNext1)
+    );
+    (Coord = Coord1, Max = Max1, AlfaNext = AlfaNext1)),!.
+
+
+% parte min do algoritmo minimax, vai escolher a pior jogada da lista de
+% jogadas fornecida
+% Se Alfa for maior que BetaNext entao melhor posicao ja foi encontrada
+% e ignora as restantes jogadas possiveis
+min([],_,_,_,_,[Beta, Beta], [_,100]):-!.
+min([H|T], Board, Player, Prof, Alfa, [Beta, BetaNext], [Coord,Min]):-
+    min(T, Board, Player, Prof, Alfa, [Beta, BetaNext1], [Coord1,Min1]),
+    (   (
+        (BetaNext1 =< Alfa; BetaNext1 = 100; Alfa = -100),
+        Prof1 is Prof - 1,
+        minimax(H, Board, 1, Player, Prof1, [Alfa,_],[BetaNext1,_],[_, Min2]),
+        ((Min1<Min2)->
+        (   Min=Min1, Coord = Coord1)
+        ;
+        (   Min=Min2, Coord = H)),
+        BetaNext is min(BetaNext1, Min2))
+    ;
+    (Coord = Coord1, Min = Min1, BetaNext = BetaNext1)), !.*/
+
+
+%-----------------------------------------------------------
+%So minimax
+
+
+conta(Board, Player, Nr) :-
+    include(=(Player), Board, Lista), length(Lista, Nr).
+
+%usa minimax para decidir qual a jogada do pc
+jogadaPc(Board, Player, Coord):-
+    jogadasPossiveis(Player, Board, ListaJogadas),
+    jogadaPc1(ListaJogadas, Board, Player, [Coord,_]).
+jogadaPc1([], _,_,[_,-100]):-!.
+jogadaPc1([H|T], Board, Player, [Coord,Pont]):-
+    jogadaPc1(T, Board, Player, [Coord1,Pont1]),
+    (minimax(H, Board, 0, Player, 4, [_, Pont2]),
+    (Pont2 > Pont1 ->
+    (   Coord = H, Pont = Pont2);
+    (   Coord = Coord1, Pont = Pont1))).
+
+
+%MinOrMax e 1 se estiver a maximizar ou 0 se estiver a minimizar
+minimax(Coord, Board, MinOrMax, Player, Prof, [NextCoord, Pont]):-
+    %ver qual o proximo jogador
+    jogador(Player, Outro),
+    %fazer jogada
+    joga(Coord, Player, Board, NextBoard),
+    jogadasPossiveis(Outro, NextBoard, ListaJogadasFilhas),
+    %preparar tabuleiro, passando de lista de listas para uma lista continua
+    flatten(NextBoard, B), (
+    %caso jogo acabe ou profundidade maxima atingida
+    (
+        (\+member(0, B); Prof = 0),!,
+        conta(B, Player, Nr),
+        Pont is Nr - 32
+    )
+    ;
+    (
+        MinOrMax = 1,!,
+        max(ListaJogadasFilhas, NextBoard, Outro, Prof, [NextCoord, Pont])
+    )
+    ;
+    (
+        MinOrMax = 0,!,
+        min(ListaJogadasFilhas, NextBoard, Outro, Prof, [NextCoord, Pont])
+    )).
+
+
+% parte max do algoritmo minimax, vai escolher a melhor jogada da lista
+% de jogadas fornecida
+% Se alfaNext for maior que beta entao para esta jogada a melhor posicao
+% ja foi descoberta e o resto das posicoes nao serao verificadas
+max([],_,_,_,[_,-100]):-!.
+max([H|T], Board, Player, Prof, [Coord,Max]):-
+    max(T, Board, Player, Prof, [Coord1,Max1]),
+    Prof1 is Prof -1,
+    minimax(H, Board, 0, Player, Prof1,[_, Max2]),
+    (Max1>=Max2->
+    (   Max=Max1, Coord = Coord1)
+    ;
+    (   Max=Max2, Coord = H)).
+
+
+% parte min do algoritmo minimax, vai escolher a pior jogada da lista de
+% jogadas fornecida
+% Se Alfa for maior que BetaNext entao melhor posicao ja foi encontrada
+% e ignora as restantes jogadas possiveis
+min([],_,_,_,[_,100]):-!.
+min([H|T], Board, Player, Prof, [Coord,Min]):-
+    min(T, Board, Player, Prof, [Coord1,Min1]),
+    Prof1 is Prof - 1,
+    minimax(H, Board, 1, Player, Prof1, [_, Min2]),
+    ((Min1<Min2)->
+    (   Min=Min1, Coord = Coord1)
+    ;
+    (   Min=Min2, Coord = H)).
+
+
+
